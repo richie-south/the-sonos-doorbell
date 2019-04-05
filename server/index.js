@@ -122,9 +122,14 @@ const pauseCurrentPlaySoundResumePrevious = async (sonos, device, track) => {
   await sonos.seek(track.startTimeSEC)
 
   setTimeout(async () => {
-    await sonos.play(cleenSonosUri(currentTrack.uri))
-    await sonos.seek(currentTrack.position)
-    isPlaying = false
+    try {
+      await sonos.play(cleenSonosUri(currentTrack.uri))
+      await sonos.seek(currentTrack.position)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      isPlaying = false
+    }
   }, track.playTimeMILLISECONDS + 1000)
 }
 
@@ -133,8 +138,13 @@ const playSound = async (sonos, track) => {
   await sonos.seek(track.startTimeSEC)
 
   setTimeout(async () => {
-    await sonos.pause()
-    isPlaying = false
+    try {
+      await sonos.pause()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      isPlaying = false
+    }
   }, track.playTimeMILLISECONDS + 1000)
 }
 
@@ -146,6 +156,19 @@ const failReset = () => {
     isPlaying = false
   }, 30000)
 }
+
+const playTrackOnAllSonos = async (track) =>
+  Promise.all(devices.map(async (device) => {
+    const sonos = new Sonos(device.host)
+    const state = await sonos.getCurrentState()
+    sonos.setSpotifyRegion(SpotifyRegion.EU)
+
+    if (state === 'playing') {
+      return pauseCurrentPlaySoundResumePrevious(sonos, device, track)
+    }
+
+    return playSound(sonos, track)
+  }))
 
 const onDoorBell = async (req, res) => {
   const track = getRandomTrack()
@@ -160,17 +183,7 @@ const onDoorBell = async (req, res) => {
   }
   isPlaying = true
   try {
-    await Promise.all(devices.map(async (device) => {
-      const sonos = new Sonos(device.host)
-      const state = await sonos.getCurrentState()
-      sonos.setSpotifyRegion(SpotifyRegion.EU)
-
-      if (state === 'playing') {
-        await pauseCurrentPlaySoundResumePrevious(sonos, device, track)
-      } else {
-        await playSound(sonos, track)
-      }
-    }))
+    await playTrackOnAllSonos(track)
   } catch (error) {
     console.error(error)
     isPlaying = false
