@@ -105,8 +105,15 @@ DeviceDiscovery((device) => {
 const getRandomTrack = () =>
   TRACKS[Math.floor(Math.random() * TRACKS.length)]
 
+/**
+ * if we do not cleen the uri
+ * the track will not get the correct name and image
+ * in the sonos app
+ */
 const cleenSonosUri = (uri) =>
-  uri.substring(16, uri.length).split('?')[0].split('%3a').join(':')
+  uri.includes('spotify')
+    ? uri.substring(16, uri.length).split('?')[0].split('%3a').join(':')
+    : uri
 
 const pauseCurrentPlaySoundResumePrevious = async (sonos, device, track) => {
   const currentTrack = await device.currentTrack()
