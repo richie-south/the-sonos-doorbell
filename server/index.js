@@ -98,7 +98,7 @@ const TRACKS = [
 
 const devices = []
 
-DeviceDiscovery((device) => {
+let search = DeviceDiscovery((device) => {
   devices.push(device)
 })
 
@@ -200,13 +200,13 @@ const onDoorBell = async (req, res) => {
 
 const onFlush = (req, res) => {
   devices.splice(0, devices.length)
-  DeviceDiscovery((device) => {
-    devices.push(device)
+  search.destroy(() => {
+    search = DeviceDiscovery((device) => {
+      devices.push(device)
+    })
   })
 
-  return send(res, 200, {
-    data: devices
-  })
+  return send(res, 200)
 }
 
 const notfound = (req, res) => send(res, 404, 'Not found route')
