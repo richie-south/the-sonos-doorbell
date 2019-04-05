@@ -115,7 +115,7 @@ const cleenSonosUri = (uri) =>
     ? uri.substring(16, uri.length).split('?')[0].split('%3a').join(':')
     : uri
 
-const pauseCurrentPlaySoundResumePrevious = async (sonos, device, track) => {
+const pauseCurrentPlayTrackResumePrevious = async (sonos, device, track) => {
   const currentTrack = await device.currentTrack()
 
   await sonos.play(track.uri)
@@ -133,7 +133,7 @@ const pauseCurrentPlaySoundResumePrevious = async (sonos, device, track) => {
   }, track.playTimeMILLISECONDS + 1000)
 }
 
-const playSound = async (sonos, track) => {
+const playTrack = async (sonos, track) => {
   await sonos.play(track.uri)
   await sonos.seek(track.startTimeSEC)
 
@@ -164,10 +164,10 @@ const playTrackOnAllSonos = async (track) =>
     sonos.setSpotifyRegion(SpotifyRegion.EU)
 
     if (state === 'playing') {
-      return pauseCurrentPlaySoundResumePrevious(sonos, device, track)
+      return pauseCurrentPlayTrackResumePrevious(sonos, device, track)
     }
 
-    return playSound(sonos, track)
+    return playTrack(sonos, track)
   }))
 
 const onDoorBell = async (req, res) => {
