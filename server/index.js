@@ -181,6 +181,7 @@ const onDoorBell = async (req, res) => {
       }
     })
   }
+
   isPlaying = true
   try {
     await playTrackOnAllSonos(track)
@@ -197,9 +198,21 @@ const onDoorBell = async (req, res) => {
   })
 }
 
+const onFlush = (req, res) => {
+  devices.splice(0, devices.length)
+  DeviceDiscovery((device) => {
+    devices.push(device)
+  })
+
+  return send(res, 200, {
+    data: devices
+  })
+}
+
 const notfound = (req, res) => send(res, 404, 'Not found route')
 
 module.exports = router(
-  get('/ondoorbell', onDoorBell),
+  get('/doorbell', onDoorBell),
+  get('/flush', onFlush),
   get('/*', notfound)
 )
